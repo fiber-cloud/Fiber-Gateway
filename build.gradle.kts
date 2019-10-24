@@ -17,6 +17,7 @@ dependencies {
 
     implementation(Dependencies.ktorCore)
     implementation(Dependencies.ktorNetty)
+    implementation(Dependencies.ktorClient)
 
     implementation(Dependencies.logback)
 }
@@ -27,13 +28,27 @@ tasks {
         kotlinOptions.jvmTarget = "1.8"
     }
 
+    val checkLib = register("checkExportedDependencies") {
+        this.group = "fiber"
+
+        configurations.implementation.get().isCanBeResolved = true
+
+        val path = "${buildDir.path}/export"
+        file(path).listFiles()
+            ?.filter { !configurations.implementation.get().map { file -> file.name }.contains(it.name) }
+            ?.forEach {
+                it.delete()
+            }
+    }
+
     val exportLib = register("exportDependencies", Copy::class) {
         configurations.implementation.get().isCanBeResolved = true
 
-        into(buildDir.path + "/export")
+        into("${buildDir.path}/export")
         from(configurations.implementation.get())
 
-        this.group = "app.fiber"
+        this.group = "fiber"
+        dependsOn(checkLib)
     }
 
     build {
@@ -60,6 +75,8 @@ object Dependencies {
 
     const val ktorCore = "io.ktor:ktor-server-core:${Version.ktor}"
     const val ktorNetty = "io.ktor:ktor-server-netty:${Version.ktor}"
+
+    const val ktorClient = "io.ktor:ktor-client-apache:${Version.ktor}"
 
     const val logback = "ch.qos.logback:logback-classic:${Version.logback}"
 }
