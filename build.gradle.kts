@@ -30,22 +30,18 @@ tasks {
 
     val checkLib = register("checkExportedDependencies") {
         this.group = "fiber"
-        configurations.implementation.get().isCanBeResolved = true
-
         val path = "${buildDir.path}/export"
+
         file(path).listFiles()
-            ?.filter { !configurations.implementation.get().map { file -> file.name }.contains(it.name) }
-            ?.forEach {
-                it.delete()
-            }
+            ?.filter { !configurations.runtimeClasspath.get().map { file -> file.name }.contains(it.name) }
+            ?.forEach { it.delete() }
     }
 
     val exportLib = register("exportDependencies", Copy::class) {
         this.group = "fiber"
-        configurations.implementation.get().isCanBeResolved = true
 
         into("${buildDir.path}/export")
-        from(configurations.implementation.get())
+        from( configurations.runtimeClasspath.get())
 
         dependsOn(checkLib)
     }
