@@ -20,6 +20,8 @@ dependencies {
     implementation(Dependencies.ktorClient)
 
     implementation(Dependencies.logback)
+
+    implementation(Dependencies.koin)
 }
 
 tasks {
@@ -61,6 +63,7 @@ object Version {
     const val kotlin = "1.3.50"
     const val ktor = "1.2.5"
     const val logback = "1.2.3"
+    const val koin = "2.0.1"
 
 }
 
@@ -74,4 +77,6 @@ object Dependencies {
     const val ktorClient = "io.ktor:ktor-client-apache:${Version.ktor}"
 
     const val logback = "ch.qos.logback:logback-classic:${Version.logback}"
+
+    const val koin = "org.koin:koin-ktor:${Version.koin}"
 }
