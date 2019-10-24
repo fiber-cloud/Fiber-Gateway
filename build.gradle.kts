@@ -30,7 +30,6 @@ tasks {
 
     val checkLib = register("checkExportedDependencies") {
         this.group = "fiber"
-
         configurations.implementation.get().isCanBeResolved = true
 
         val path = "${buildDir.path}/export"
@@ -42,12 +41,12 @@ tasks {
     }
 
     val exportLib = register("exportDependencies", Copy::class) {
+        this.group = "fiber"
         configurations.implementation.get().isCanBeResolved = true
 
         into("${buildDir.path}/export")
         from(configurations.implementation.get())
 
-        this.group = "fiber"
         dependsOn(checkLib)
     }
 
