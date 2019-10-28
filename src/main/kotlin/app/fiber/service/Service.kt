@@ -5,9 +5,12 @@ import io.ktor.application.ApplicationCall
 import io.ktor.client.HttpClient
 import io.ktor.client.call.call
 import io.ktor.client.response.HttpResponse
+import io.ktor.features.origin
 import io.ktor.http.HttpMethod
+import io.ktor.http.URLProtocol
 import io.ktor.request.httpMethod
 import io.ktor.request.queryString
+import io.ktor.request.receiveText
 import io.ktor.request.uri
 
 data class Service(private val name: String, val selector: Selector) {
@@ -22,12 +25,12 @@ data class Service(private val name: String, val selector: Selector) {
                 host = this@Service.host!!
                 port = this@Service.port!!.toInt()
                 encodedPath = request.uri.replace(request.queryString(), "")
-                //parameters.appendAll(request.queryParameters)
+                protocol = URLProtocol.byName[request.origin.scheme] ?: URLProtocol.HTTP
+                parameters.appendAll(request.queryParameters)
             }
             method = HttpMethod(request.httpMethod.value.toUpperCase())
-            //headers.appendAll(request.headers)
-            //body = call.receiveText()
-            //contentType(request.contentType())
+            headers.appendAll(request.headers)
+            body = call.receiveText()
         }.response
     }
 

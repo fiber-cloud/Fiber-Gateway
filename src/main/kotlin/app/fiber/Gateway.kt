@@ -1,34 +1,29 @@
 package app.fiber
 
-import app.fiber.service.Service
 import app.fiber.service.ServiceRepository
-import app.fiber.service.selector.Selector
+import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.client.HttpClient
-import io.ktor.client.call.receive
 import io.ktor.features.CallLogging
 import io.ktor.features.DefaultHeaders
 import io.ktor.features.StatusPages
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.content.TextContent
-import io.ktor.http.withCharset
 import io.ktor.request.uri
 import io.ktor.response.respond
-import io.ktor.response.respondText
-import io.ktor.routing.get
-import io.ktor.routing.route
-import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.util.filter
+import kotlinx.coroutines.io.ByteWriteChannel
+import kotlinx.coroutines.io.copyAndClose
 import kotlinx.coroutines.launch
 import org.koin.dsl.module
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.lang.Exception
 
 fun main() {
     val client = HttpClient()
@@ -56,22 +51,32 @@ fun main() {
             modules(gatewayModule)
         }
 
-        val repository by inject<ServiceRepository>()
-        repository.addService(Service("shop", Selector("/shop")))
+        val serviceRepository by inject<ServiceRepository>()
 
-        routing {
-            get("/hello") {
-                call.respondText("Hello from Ktor gateway!", ContentType.Text.Plain)
-            }
+        intercept(ApplicationCallPipeline.Call) {
+            val service = serviceRepository.select(this.call.request.uri)
 
-            route("/*") {
-                handle {
-                    val service = repository.select(this.call.request.uri)
-                    launch {
-                        val response = service.forward(client, this@handle.call)
-                        println(response.receive<String>())
+            launch {
+                val response = service.forward(client, this@intercept.call)
+                val call = this@intercept.call
+
+                call.respond(object : OutgoingContent.WriteChannelContent() {
+                    override val contentType: ContentType? = ContentType.parse(
+                        response.headers[HttpHeaders.ContentType] ?: ContentType.Text.Plain.toString()
+                    )
+                    override val headers: Headers = Headers.build {
+                        appendAll(response.headers.filter { key, _ ->
+                            !key.equals(
+                                HttpHeaders.ContentType,
+                                ignoreCase = true
+                            ) && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                        })
                     }
-                }
+                    override val status: HttpStatusCode? = response.status
+                    override suspend fun writeTo(channel: ByteWriteChannel) {
+                        response.content.copyAndClose(channel)
+                    }
+                })
             }
         }
 
