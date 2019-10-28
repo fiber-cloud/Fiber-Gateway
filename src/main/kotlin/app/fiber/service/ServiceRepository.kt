@@ -10,7 +10,9 @@ class ServiceRepository {
 
     fun select(uri: String): Service {
         val selected =  this.services.filter { it.selector.isSelected(uri) }
+
         require(selected.size <= 1) { "Found more than 1 selector!" }
+        requireNotNull(selected.firstOrNull()) { "Service not found!" }
 
         return selected.first()
     }
