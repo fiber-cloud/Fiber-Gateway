@@ -10,7 +10,7 @@ USER $APPLICATION_USER
 
 COPY ./build/export /app/lib
 
-COPY ./build/libs/fiber-gateway.jar /app/app.jar
+COPY ./build/libs/Fiber-Gateway.jar /app/app.jar
 WORKDIR /app
 
 CMD ["java", "-cp",  "lib/*:app.jar", "app.fiber.GatewayKt"]
