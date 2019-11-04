@@ -33,7 +33,7 @@ fun Application.main() {
             call.respond(
                 io.ktor.http.content.TextContent(
                     writer.toString(),
-                    ContentType.Text.Plain.withCharset(kotlin.text.Charsets.UTF_8),
+                    ContentType.Text.Plain.withCharset(Charsets.UTF_8),
                     io.ktor.http.HttpStatusCode.InternalServerError
                 )
             )
