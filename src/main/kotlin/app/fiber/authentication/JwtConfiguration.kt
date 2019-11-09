@@ -10,7 +10,7 @@ object JwtConfiguration {
 
     private const val issuer = "Fiber-Gateway"
 
-    private val secret = System.getenv("JWT_SECRET") ?: throw SecretNotAvailableException()
+    private val secret = System.getenv("SECRET_JWT") ?: throw SecretNotAvailableException()
 
     private val algorithm = Algorithm.HMAC256(this.secret)
 
@@ -29,4 +29,4 @@ object JwtConfiguration {
 
 }
 
-class SecretNotAvailableException : Exception("Secret is not available!")
+class SecretNotAvailableException : Exception("JWT Secret is not available!")
