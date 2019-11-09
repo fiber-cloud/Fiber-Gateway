@@ -13,10 +13,7 @@ import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.StatusPages
+import io.ktor.features.*
 import io.ktor.gson.gson
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -88,8 +85,7 @@ fun Application.main() {
 }
 
 val gatewayModule = module {
-    //TODO provide ip dynamically
-    val cassandraHost = "192.168.99.100"
+    val cassandraHost = System.getenv("CASSANDRA_SERVICE_HOST") ?: throw Exception("Cassandra host not found!")
 
     val cassandra = CassandraConnector(cassandraHost)
     val userRepository = UserRepository(cassandra.session)
