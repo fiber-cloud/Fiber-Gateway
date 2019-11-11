@@ -28,6 +28,10 @@ dependencies {
     implementation(Dependencies.ktorClient)
 
     implementation(Dependencies.logback)
+
+    testImplementation(Dependencies.junit)
+    testImplementation(Dependencies.ktorTestEngine)
+    testImplementation(Dependencies.mockk)
 }
 
 tasks {
@@ -70,6 +74,10 @@ object Version {
     const val kotlin = "1.3.50"
     const val ktor = "1.2.5"
     const val logback = "1.2.3"
+    const val spotifyDns = "3.1.5"
+
+    const val junit = "5.5.2"
+    const val mockk = "1.9.3"
 }
 
 object Dependencies {
@@ -87,5 +95,12 @@ object Dependencies {
 
     const val logback = "ch.qos.logback:logback-classic:${Version.logback}"
 
+    const val spotifyDns = "com.spotify:dns:${Version.spotifyDns}"
+
     const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Version.kotlin}"
+
+
+    const val junit = "org.junit.jupiter:junit-jupiter-api:${Version.junit}"
+    const val ktorTestEngine = "io.ktor:ktor-server-test-host:${Version.ktor}"
+    const val mockk = "io.mockk:mockk:${Version.mockk}"
 }
