@@ -1,5 +1,6 @@
 package app.fiber.feature
 
+import app.fiber.service.Service
 import app.fiber.service.ServiceRepository
 import io.ktor.application.ApplicationCall
 import io.ktor.application.ApplicationCallPipeline
@@ -22,18 +23,47 @@ import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 
+/**
+ * Forward [Feature] for ktor to forward the incoming requests.
+ *
+ * The [Feature] intercept the [ApplicationCallPipeline] for hook up all incoming requests and send them to the matching
+ * services. Then the feature is waiting for the responses of the services and transform them to the response of ktor.
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
 class Forwarding : KoinComponent {
 
+    /**
+     * Client for forwarding request.
+     */
     private val client: HttpClient = HttpClient()
 
+    /**
+     * [ServiceRepository] for getting the matching [services][Service].
+     */
     private val serviceRepository by inject<ServiceRepository>()
 
+    /**
+     * Adding shutdown hook to secure, that the [Client][HttpClient] will be closed.
+     */
     init {
         Runtime.getRuntime().addShutdownHook(Thread(this.client::close))
     }
 
+    /**
+     * Configuration class only exists, because ktor [features][Feature] should have a [Configuration].
+     *
+     * @author Tammo0987
+     * @since 1.0
+     */
     class Configuration
 
+    /**
+     * Hooks the incoming requests and forward them to the matching [Service] and send the response back.
+     *
+     * @param [context] [PipelineContext] for hooking the incoming requests.
+     */
     private fun intercept(context: PipelineContext<Unit, ApplicationCall>) {
         val call = context.call
         val service = serviceRepository.select(call.request.uri)
@@ -61,6 +91,12 @@ class Forwarding : KoinComponent {
         }
     }
 
+    /**
+     * Defines the [Feature] to use it.
+     *
+     * @author Tammo0987
+     * @since 1.0
+     */
     companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Forwarding> {
 
         override val key = AttributeKey<Forwarding>("Forwarding")
