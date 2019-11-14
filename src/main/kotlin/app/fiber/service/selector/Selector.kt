@@ -14,8 +14,6 @@ import app.fiber.service.Service
 data class Selector(private val pattern: String, private val type: SelectorType = SelectorType.STARTS_WITH) {
 
     /**
-     *
-     *
      * @return If the [route] is matching to the [pattern].
      */
     fun isSelected(route: String): Boolean {

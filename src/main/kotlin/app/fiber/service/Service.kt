@@ -13,11 +13,35 @@ import io.ktor.request.queryString
 import io.ktor.request.receiveText
 import io.ktor.request.uri
 
+/**
+ * Defines a service in favor of forwarding.
+ *
+ * @param [name] Name of the [Service].
+ * @param [selector] Selector to match this [Service].
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
 data class Service(private val name: String, val selector: Selector) {
 
+    /**
+     * Host of the service.
+     */
     private val host: String? = System.getenv("${this.name.toUpperCase()}_SERVICE_HOST")
+
+    /**
+     * Port of the service.
+     */
     private val port: String? = System.getenv("${this.name.toUpperCase()}_SERVICE_PORT")
 
+    /**
+     * Forward the [call] to the service and get the response.
+     *
+     * @param [client] [HttpClient] to call the service.
+     * @param [call] [ApplicationCall] which holds the request information.
+     *
+     * @return [HttpResponse] of the call.
+     */
     suspend fun forward(client: HttpClient, call: ApplicationCall): HttpResponse {
         val request = call.request
         return client.call {
@@ -34,6 +58,9 @@ data class Service(private val name: String, val selector: Selector) {
         }.response
     }
 
+    /**
+     * Overrides the [toString] call.
+     */
     override fun toString(): String {
         return "Service(name='$name', host='$host', port='$port')"
     }
