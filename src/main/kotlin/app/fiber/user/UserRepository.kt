@@ -9,28 +9,65 @@ import com.datastax.oss.driver.shaded.guava.common.cache.CacheLoader
 import java.time.Duration
 import java.util.*
 
+/**
+ * Represent a user account.
+ *
+ * @param [uuid] [UUID] to identify the user as unique.
+ * @param [name] Name of the user as an alias for a better distinction.
+ * @param [password] Password to authorize if the user of the application has access to this account.
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
 data class User(val uuid: UUID, val name: String, val password: String)
 
+/**
+ * Repository to save [User] data with a Cassandra implementation.
+ *
+ * @param [session] [CqlSession] to call queries on Cassandra.
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
 class UserRepository(private val session: CqlSession) {
 
+    /**
+     * Name of the table for the data model.
+     */
     private val table = "User"
 
+    /**
+     * Cache for a relief of the Cassandra traffic.
+     */
     private val cache = CacheBuilder.newBuilder()
-        .expireAfterAccess(Duration.ofMinutes(20))
+        .expireAfterAccess(Duration.ofMinutes(5))
         .build(object : CacheLoader<UUID, Optional<User>>() {
             override fun load(key: UUID): Optional<User> {
                 return Optional.ofNullable(this@UserRepository.getUserById(key))
             }
         })
 
+    /**
+     * Create the table after initialisation.
+     */
     init {
         this.createTable()
     }
 
+    /**
+     * Get the [User] instance if existing.
+     *
+     * @return The found [User] or null if not found.
+     */
     fun checkId(id: String): User? {
         return this.cache.get(UUID.fromString(id)).orElse(null)
     }
 
+    /**
+     * Insert [user] to the database.
+     *
+     * @param [user] [User] that will be inserted.
+     */
     fun insertUser(user: User) {
         val userInsert = insertInto(this.table)
             .value("user_id", bindMarker())
@@ -48,6 +85,13 @@ class UserRepository(private val session: CqlSession) {
         this.session.execute(boundStatement)
     }
 
+    /**
+     * Query [User] in the database by [userId].
+     *
+     * @param [userId] [UUID] id to identify.
+     *
+     * @return [User] if found.
+     */
     fun getUserById(userId: UUID): User? {
         val userSelect = selectFrom(this.table)
             .all()
@@ -70,6 +114,13 @@ class UserRepository(private val session: CqlSession) {
         }.one()
     }
 
+    /**
+     * Query [User] in the database by [name].
+     *
+     * @param [name] Name to identify.
+     *
+     * @return [User] if found.
+     */
     fun getUserByName(name: String): User? {
         val userSelect = selectFrom(this.table)
             .all()
@@ -93,6 +144,11 @@ class UserRepository(private val session: CqlSession) {
         }.one()
     }
 
+    /**
+     * Delete [user] from the database.
+     *
+     * @param [user] [User] to delete.
+     */
     fun deleteUser(user: User) {
         val userDelete = deleteFrom(this.table)
             .whereColumn("user_id")
@@ -109,10 +165,18 @@ class UserRepository(private val session: CqlSession) {
         //TODO invalidate all caches (dns resolve)
     }
 
+    /**
+     * Removes the entry [uuid] from the [cache].
+     *
+     * @param [uuid] Entry to invalidate.
+     */
     fun invalidateCache(uuid: UUID) {
         this.cache.invalidate(uuid)
     }
 
+    /**
+     * Creates the table in the database.
+     */
     private fun createTable() {
         val tableQuery = SchemaBuilder.createTable(this.table)
             .ifNotExists()
