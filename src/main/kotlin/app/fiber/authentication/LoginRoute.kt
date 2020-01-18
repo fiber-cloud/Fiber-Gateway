@@ -33,13 +33,6 @@ fun Route.authenticate() {
             this.call.respond(LoginResponse(success, token))
         }
     }
-
-    post("/cache/remove/{uuid}") {
-        val uuid = UUID.fromString(this.call.parameters["uuid"])
-        userRepository.invalidateCache(uuid)
-
-        this.call.respond(HttpStatusCode.OK)
-    }
 }
 
 /**

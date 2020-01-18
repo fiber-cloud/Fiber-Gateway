@@ -34,17 +34,15 @@ class UserRepository(private val session: CqlSession) {
     /**
      * Name of the table for the data model.
      */
-    private val table = "User"
+    private val table = "users"
 
     /**
      * Cache for a relief of the Cassandra traffic.
      */
     private val cache = CacheBuilder.newBuilder()
         .expireAfterAccess(Duration.ofMinutes(5))
-        .build(object : CacheLoader<UUID, Optional<User>>() {
-            override fun load(key: UUID): Optional<User> {
-                return Optional.ofNullable(this@UserRepository.getUserById(key))
-            }
+        .build(object : CacheLoader<UUID, User?>() {
+            override fun load(key: UUID): User? = this@UserRepository.getUserById(key)
         })
 
     /**
@@ -60,7 +58,7 @@ class UserRepository(private val session: CqlSession) {
      * @return The found [User] or null if not found.
      */
     fun checkId(id: String): User? {
-        return this.cache.get(UUID.fromString(id)).orElse(null)
+        return this.cache.get(UUID.fromString(id))
     }
 
     /**
@@ -160,18 +158,7 @@ class UserRepository(private val session: CqlSession) {
             .setUuid(0, user.uuid)
 
         this.session.execute(boundStatement)
-        this.invalidateCache(user.uuid)
-
-        //TODO invalidate all caches (dns resolve)
-    }
-
-    /**
-     * Removes the entry [uuid] from the [cache].
-     *
-     * @param [uuid] Entry to invalidate.
-     */
-    fun invalidateCache(uuid: UUID) {
-        this.cache.invalidate(uuid)
+        this.cache.invalidate(user.uuid)
     }
 
     /**
