@@ -54,12 +54,17 @@ fun Application.main() {
         }
     }
 
+    install(CORS) {
+        anyHost()
+        allowNonSimpleContentTypes = true
+    }
+
     install(StatusPages) {
         exception<Exception> {
             val writer = StringWriter()
             it.printStackTrace(PrintWriter(writer))
 
-            call.respond(
+            this.call.respond(
                 TextContent(
                     writer.toString(),
                     ContentType.Text.Plain.withCharset(Charsets.UTF_8),
@@ -90,7 +95,6 @@ val gatewayModule = module {
     val cassandra = CassandraConnector(cassandraHost)
     val userRepository = UserRepository(cassandra.session)
 
-    single { cassandra }
     single { userRepository }
     single { ServiceRepository() }
 }
