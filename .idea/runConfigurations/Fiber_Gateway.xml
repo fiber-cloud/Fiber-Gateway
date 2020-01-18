@@ -6,6 +6,18 @@
         <option name="command" value="" />
         <option name="containerName" value="Fiber-Gateway" />
         <option name="entrypoint" value="" />
+        <option name="envVars">
+          <list>
+            <DockerEnvVarImpl>
+              <option name="name" value="SECRET_JWT" />
+              <option name="value" value="Test" />
+            </DockerEnvVarImpl>
+            <DockerEnvVarImpl>
+              <option name="name" value="CASSANDRA_SERVICE_HOST" />
+              <option name="value" value="192.168.99.100" />
+            </DockerEnvVarImpl>
+          </list>
+        </option>
         <option name="imageTag" value="fiber-gateway" />
         <option name="portBindings">
           <list>
