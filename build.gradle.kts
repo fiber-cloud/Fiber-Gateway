@@ -76,7 +76,7 @@ object Version {
     const val kotlin = "1.3.50"
     const val ktor = "1.2.5"
     const val logback = "1.2.3"
-    const val kubernetes = "6.0.1"
+    const val kubernetes = "4.7.0"
 
     const val junit = "5.5.2"
     const val mockk = "1.9.3"
@@ -95,7 +95,7 @@ object Dependencies {
     const val ktorGson =  "io.ktor:ktor-gson:${Version.ktor}"
     const val ktorClient = "io.ktor:ktor-client-apache:${Version.ktor}"
 
-    const val kubernetes = "io.kubernetes:client-java:${Version.kubernetes}"
+    const val kubernetes = "io.fabric8:kubernetes-client:${Version.kubernetes}"
 
     const val logback = "ch.qos.logback:logback-classic:${Version.logback}"
 

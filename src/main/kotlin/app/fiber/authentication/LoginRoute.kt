@@ -6,6 +6,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import io.ktor.routing.patch
 import io.ktor.routing.post
 import org.koin.ktor.ext.inject
 import java.util.*
@@ -32,6 +33,13 @@ fun Route.authenticate() {
             val token = if (success) JwtConfiguration.makeToken(user.uuid.toString()) else ""
             this.call.respond(LoginResponse(success, token))
         }
+    }
+
+    patch("/cache/remove/{uuid}") {
+        val uuid = UUID.fromString(this.call.parameters["uuid"])
+        userRepository.invalidateCache(uuid)
+
+        this.call.respond(HttpStatusCode.OK)
     }
 }
 

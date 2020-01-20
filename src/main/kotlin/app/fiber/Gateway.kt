@@ -6,6 +6,7 @@ import app.fiber.cassandra.CassandraConnector
 import app.fiber.feature.Forwarding
 import app.fiber.service.ServiceRepository
 import app.fiber.user.UserRepository
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -25,22 +26,14 @@ import io.ktor.routing.route
 import io.ktor.server.engine.commandLineEnvironment
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.kubernetes.client.apis.CoreV1Api
-import io.kubernetes.client.util.ClientBuilder
 import org.koin.dsl.module
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import java.io.PrintWriter
 import java.io.StringWriter
 
+
 fun main(args: Array<String>) {
-    val client = ClientBuilder.cluster().build()
-    val api = CoreV1Api(client)
-
-    api.listPodForAllNamespaces(null, null, null, null, null, null, null, null).items.forEach {
-        println(it.metadata)
-    }
-
     embeddedServer(Netty, commandLineEnvironment(args)).start(true)
 }
 
@@ -106,4 +99,5 @@ val gatewayModule = module {
 
     single { userRepository }
     single { ServiceRepository() }
+    single { DefaultKubernetesClient() }
 }
