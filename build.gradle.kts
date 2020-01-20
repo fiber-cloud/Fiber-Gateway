@@ -74,7 +74,7 @@ object Version {
     const val kotlin = "1.3.50"
     const val ktor = "1.2.5"
     const val logback = "1.2.3"
-    const val spotifyDns = "3.1.5"
+    const val kubernetes = "6.0.1"
 
     const val junit = "5.5.2"
     const val mockk = "1.9.3"
@@ -93,9 +93,9 @@ object Dependencies {
     const val ktorGson =  "io.ktor:ktor-gson:${Version.ktor}"
     const val ktorClient = "io.ktor:ktor-client-apache:${Version.ktor}"
 
-    const val logback = "ch.qos.logback:logback-classic:${Version.logback}"
+    const val kubernetes = "io.kubernetes:client-java:${Version.kubernetes}"
 
-    const val spotifyDns = "com.spotify:dns:${Version.spotifyDns}"
+    const val logback = "ch.qos.logback:logback-classic:${Version.logback}"
 
     const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Version.kotlin}"
 
