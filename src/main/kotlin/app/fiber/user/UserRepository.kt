@@ -6,6 +6,13 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder.*
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
 import com.datastax.oss.driver.shaded.guava.common.cache.CacheBuilder
 import com.datastax.oss.driver.shaded.guava.common.cache.CacheLoader
+import io.fabric8.kubernetes.client.KubernetesClient
+import io.ktor.client.HttpClient
+import io.ktor.client.request.patch
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.koin.core.KoinComponent
+import org.koin.core.inject
 import java.time.Duration
 import java.util.*
 
@@ -29,7 +36,7 @@ data class User(val uuid: UUID, val name: String, val password: String)
  * @author Tammo0987
  * @since 1.0
  */
-class UserRepository(private val session: CqlSession) {
+class UserRepository(private val session: CqlSession) : KoinComponent {
 
     /**
      * Name of the table for the data model.
@@ -67,6 +74,8 @@ class UserRepository(private val session: CqlSession) {
      * @param [user] [User] that will be inserted.
      */
     fun insertUser(user: User) {
+        this.invalidateCache(user.uuid)
+
         val userInsert = insertInto(this.table)
             .value("user_id", bindMarker())
             .value("name", bindMarker())
@@ -158,7 +167,37 @@ class UserRepository(private val session: CqlSession) {
             .setUuid(0, user.uuid)
 
         this.session.execute(boundStatement)
-        this.cache.invalidate(user.uuid)
+        this.invalidateCache(user.uuid)
+    }
+
+    /**
+     * Invalidates cache from all deployed instances.
+     *
+     * @param [uuid] UUID to invalidate.
+     */
+    fun invalidateCache(uuid: UUID) {
+        this.cache.invalidate(uuid)
+
+        val kubernetes by inject<KubernetesClient>()
+        val ownIp = System.getenv("POD_IP") ?: ""
+
+        val ips = kubernetes.pods()
+            .inNamespace("fiber")
+            .withLabel("app", "fiber-gateway")
+            .list()
+            .items
+            .map { it.status.podIP }
+            .filter { it != ownIp }
+
+        val httpClient = HttpClient()
+
+        runBlocking {
+            ips.map { ip ->
+                launch { httpClient.patch("http://$ip/api/cache/remove/$uuid") }
+            }.forEach { it.join() }
+        }
+
+        httpClient.close()
     }
 
     /**

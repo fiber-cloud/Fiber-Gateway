@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fiber-gateway
+  namespace: fiber
+  labels:
+    app: fiber-gateway
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: fiber-gateway
+      labels:
+        app: fiber-gateway
+    spec:
+      serviceAccountName: fiber-gateway
+      containers:
+        - name: fiber-gateway
+          image: eu.gcr.io/fiber-258319/fiber-gateway:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              hostPort: 80
+              protocol: TCP
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SECRET_JWT
+              valueFrom:
+                secretKeyRef:
+                  name: jwt
+                  key: secret
+
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: fiber-gateway
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fiber-gateway-service
+  namespace: fiber
+spec:
+  selector:
+    app: fiber-gateway
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+  type: LoadBalancer
+---
