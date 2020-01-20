@@ -27,6 +27,8 @@ dependencies {
 
     implementation(Dependencies.ktorClient)
 
+    implementation(Dependencies.kubernetes)
+
     implementation(Dependencies.logback)
 
     testImplementation(Dependencies.junit)
