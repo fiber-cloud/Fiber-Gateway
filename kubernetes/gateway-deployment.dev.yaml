@@ -24,6 +24,10 @@ spec:
               hostPort: 80
               protocol: TCP
           env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: SECRET_JWT
               valueFrom:
                 secretKeyRef:
