@@ -53,9 +53,12 @@ tasks {
 
     val exportLib = register("exportDependencies", Copy::class) {
         this.group = "fiber"
+        val path = "${buildDir.path}/export"
 
-        into("${buildDir.path}/export")
-        from(configurations.runtimeClasspath.get())
+        into(path)
+
+        val from = configurations.runtimeClasspath.get().filterNot { file(path).listFiles()?.map { file -> file.name }?.contains(it.name) ?: false }
+        from(from)
 
         dependsOn(checkLib)
     }
