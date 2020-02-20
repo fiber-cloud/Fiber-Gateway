@@ -1,9 +1,9 @@
 package app.fiber.service
 
 import app.fiber.database.User
-import app.fiber.database.UserDatabase
 import app.fiber.main
 import app.fiber.service.selector.Selector
+import app.fiber.user.UserRepository
 import io.ktor.application.Application
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -39,16 +39,16 @@ class ServiceTest : KoinTest {
 
     @Test
     fun `test if forwarding works`(): Unit = withTestApplication(Application::main) {
-        val userDatabase = mockk<UserDatabase>()
+        val userRepository = mockk<UserRepository>()
         val id = UUID.randomUUID()
         val user = User(id, "Name", "Password")
 
-        every { userDatabase.getUserByName("Name") } returns user
-        every { userDatabase.getUserById(id) } returns user
+        every { userRepository.getUserByName("Name") } returns user
+        every { userRepository.getUserById(id.toString()) } returns user
 
         loadKoinModules(
             module {
-                single(override = true) { userDatabase }
+                single(override = true) { userRepository }
             }
         )
 
@@ -58,6 +58,7 @@ class ServiceTest : KoinTest {
         }.response.content
             ?.replace("{\"success\":true,\"token\":\"", "")
             ?.replace("\"}", "")
+
 
         val client = HttpClient(MockEngine) {
             engine {
@@ -87,8 +88,8 @@ class ServiceTest : KoinTest {
             addHeader(HttpHeaders.Authorization, "Bearer $token")
         }.apply {
             assertTrue(this.requestHandled)
-            assertEquals(HttpStatusCode.OK, this.response.status())
             assertEquals("Forwarded Content", this.response.content)
+            assertEquals(HttpStatusCode.OK, this.response.status())
             assertEquals("value", this.response.headers["test"])
         }
     }

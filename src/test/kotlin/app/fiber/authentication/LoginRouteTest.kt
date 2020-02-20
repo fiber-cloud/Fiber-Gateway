@@ -15,7 +15,10 @@ import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.mockk.*
 import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.contrib.java.lang.system.EnvironmentVariables
 import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
 import org.koin.test.KoinTest
@@ -28,6 +31,15 @@ class LoginRouteTest : KoinTest {
 
     private val successFalse = "{\"success\":false,\"token\":\"\"}"
 
+    @Rule
+    @JvmField
+    val environmentVariables = EnvironmentVariables()
+
+    @Before
+    fun setUp() {
+        this.environmentVariables.set("SECRET_JWT", "SECRET")
+    }
+
     @Test
     fun `test if user was not found`() = testApp {
         val userDatabase = mockk<UserDatabase>()
@@ -36,7 +48,6 @@ class LoginRouteTest : KoinTest {
         loadKoinModules(
             module {
                 single(override = true) { userDatabase }
-                single(override = true) { JwtConfiguration("SECRET") }
             }
         )
 
@@ -58,7 +69,6 @@ class LoginRouteTest : KoinTest {
         loadKoinModules(
             module {
                 single(override = true) { userDatabase }
-                single(override = true) { JwtConfiguration("SECRET") }
             }
         )
 
@@ -80,7 +90,6 @@ class LoginRouteTest : KoinTest {
         loadKoinModules(
             module {
                 single(override = true) { userDatabase }
-                single(override = true) { JwtConfiguration("SECRET") }
             }
         )
 
