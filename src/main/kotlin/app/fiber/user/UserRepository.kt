@@ -1,216 +1,59 @@
 package app.fiber.user
 
-import com.datastax.oss.driver.api.core.CqlSession
-import com.datastax.oss.driver.api.core.type.DataTypes
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder.*
-import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
-import com.datastax.oss.driver.shaded.guava.common.cache.CacheBuilder
-import com.datastax.oss.driver.shaded.guava.common.cache.CacheLoader
-import io.fabric8.kubernetes.client.KubernetesClient
-import io.ktor.client.HttpClient
-import io.ktor.client.request.patch
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import app.fiber.database.User
+import app.fiber.database.UserDatabase
 import org.koin.core.KoinComponent
-import org.koin.core.inject
-import java.time.Duration
+import org.koin.core.get
 import java.util.*
 
 /**
- * Represent a user account.
- *
- * @param [uuid] [UUID] to identify the user as unique.
- * @param [name] Name of the user as an alias for a better distinction.
- * @param [password] Password to authorize if the user of the application has access to this account.
+ * Repository to save [User] data.
  *
  * @author Tammo0987
  * @since 1.0
  */
-data class User(val uuid: UUID, val name: String, val password: String)
-
-/**
- * Repository to save [User] data with a Cassandra implementation.
- *
- * @param [session] [CqlSession] to call queries on Cassandra.
- *
- * @author Tammo0987
- * @since 1.0
- */
-class UserRepository(private val session: CqlSession) : KoinComponent {
+class UserRepository : KoinComponent {
 
     /**
-     * Name of the table for the data model.
+     * [UserDatabase] to get the data.
      */
-    private val table = "users"
+    private val userDatabase = get<UserDatabase>()
 
     /**
-     * Cache for a relief of the Cassandra traffic.
+     * Add [User] to this repository.
      */
-    private val cache = CacheBuilder.newBuilder()
-        .expireAfterAccess(Duration.ofMinutes(5))
-        .build(object : CacheLoader<UUID, User?>() {
-            override fun load(key: UUID): User? = this@UserRepository.getUserById(key)
-        })
+    fun addUser(user: User) = this.userDatabase.insertUser(user)
 
     /**
-     * Create the table after initialisation.
-     */
-    init {
-        this.createTable()
-    }
-
-    /**
-     * Get the [User] instance if existing.
+     * Get specific user by id [userId].
      *
-     * @return The found [User] or null if not found.
+     * @param [userId] [UUID] id of the user.
+     *
+     * @return [User] user with the specific id.
      */
-    fun checkId(id: String): User? {
-        return this.cache.get(UUID.fromString(id))
-    }
+    fun getUserById(userId: String): User? = this.userDatabase.getUserById(UUID.fromString(userId))
 
     /**
-     * Insert [user] to the database.
+     * Get specific user by name [name].
      *
-     * @param [user] [User] that will be inserted.
+     * @param [name] id of the user.
+     *
+     * @return [User] user with the specific name.
      */
-    fun insertUser(user: User) {
-        this.invalidateCache(user.uuid)
-
-        val userInsert = insertInto(this.table)
-            .value("user_id", bindMarker())
-            .value("name", bindMarker())
-            .value("password", bindMarker())
-            .build()
-
-        val statement = this.session.prepare(userInsert)
-
-        val boundStatement = statement.bind()
-            .setUuid(0, user.uuid)
-            .setString(1, user.name)
-            .setString(2, user.password)
-
-        this.session.execute(boundStatement)
-    }
+    fun getUserByName(name: String): User? = this.userDatabase.getUserByName(name)
 
     /**
-     * Query [User] in the database by [userId].
+     * Delete a specific user.
      *
-     * @param [userId] [UUID] id to identify.
-     *
-     * @return [User] if found.
+     * @param [user] [User] user to delete.
      */
-    fun getUserById(userId: UUID): User? {
-        val userSelect = selectFrom(this.table)
-            .all()
-            .whereColumn("user_id")
-            .isEqualTo(bindMarker())
-            .build()
-
-        val statement = this.session.prepare(userSelect)
-        val boundStatement = statement.bind()
-            .setUuid(0, userId)
-
-        val result = this.session.execute(boundStatement)
-
-        return result.map { row ->
-            User(
-                row.getUuid("user_id")!!,
-                row.getString("name")!!,
-                row.getString("password")!!
-            )
-        }.one()
-    }
+    fun deleteUser(user: User) = this.userDatabase.deleteUser(user)
 
     /**
-     * Query [User] in the database by [name].
+     * Invalidate cache for [userId].
      *
-     * @param [name] Name to identify.
-     *
-     * @return [User] if found.
+     * @param [userId] [UUID] user id to invalidate.
      */
-    fun getUserByName(name: String): User? {
-        val userSelect = selectFrom(this.table)
-            .all()
-            .whereColumn("name")
-            .isEqualTo(bindMarker())
-            .allowFiltering()
-            .build()
-
-        val statement = this.session.prepare(userSelect)
-        val boundStatement = statement.bind()
-            .setString(0, name)
-
-        val result = this.session.execute(boundStatement)
-
-        return result.map { row ->
-            User(
-                row.getUuid("user_id")!!,
-                row.getString("name")!!,
-                row.getString("password")!!
-            )
-        }.one()
-    }
-
-    /**
-     * Delete [user] from the database.
-     *
-     * @param [user] [User] to delete.
-     */
-    fun deleteUser(user: User) {
-        val userDelete = deleteFrom(this.table)
-            .whereColumn("user_id")
-            .isEqualTo(bindMarker())
-            .build()
-
-        val statement = this.session.prepare(userDelete)
-        val boundStatement = statement.bind()
-            .setUuid(0, user.uuid)
-
-        this.session.execute(boundStatement)
-        this.invalidateCache(user.uuid)
-    }
-
-    /**
-     * Invalidates cache from all deployed instances.
-     *
-     * @param [uuid] UUID to invalidate.
-     */
-    fun invalidateCache(uuid: UUID) {
-        this.cache.invalidate(uuid)
-
-        val kubernetes by inject<KubernetesClient>()
-        val ownIp = System.getenv("POD_IP") ?: ""
-
-        val ips = kubernetes.pods()
-            .inNamespace("fiber")
-            .withLabel("app", "fiber-gateway")
-            .list()
-            .items
-            .map { it.status.podIP }
-            .filter { it != ownIp }
-
-        val httpClient = HttpClient()
-
-        runBlocking {
-            ips.map { ip ->
-                launch { httpClient.patch("http://$ip/api/cache/remove/$uuid") }
-            }.forEach { it.join() }
-        }
-
-        httpClient.close()
-    }
-
-    /**
-     * Creates the table in the database.
-     */
-    private fun createTable() {
-        val tableQuery = SchemaBuilder.createTable(this.table)
-            .ifNotExists()
-            .withPartitionKey("user_id", DataTypes.UUID)
-            .withColumn("name", DataTypes.TEXT)
-            .withColumn("password", DataTypes.TEXT)
-
-        this.session.execute(tableQuery.build())
-    }
+    fun invalidateCache(userId: UUID) = this.userDatabase.invalidateCache(userId)
 
 }

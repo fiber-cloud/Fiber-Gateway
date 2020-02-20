@@ -7,3 +7,6 @@
 
 .idea/*
 !.idea/runConfigurations
+
+# Cassandra
+/target

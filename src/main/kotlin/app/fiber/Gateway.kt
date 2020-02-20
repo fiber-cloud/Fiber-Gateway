@@ -2,10 +2,17 @@ package app.fiber
 
 import app.fiber.authentication.JwtConfiguration
 import app.fiber.authentication.authenticate
-import app.fiber.cassandra.CassandraConnector
-import app.fiber.feature.Forwarding
+import app.fiber.cache.KubernetesPodCacheInvalidator
+import app.fiber.cache.PodCacheInvalidator
+import app.fiber.database.CassandraUserDatabase
+import app.fiber.database.UserDatabase
+import app.fiber.logger.logger
+import app.fiber.redirect.Redirect
 import app.fiber.service.ServiceRepository
 import app.fiber.user.UserRepository
+import com.datastax.oss.driver.api.core.AllNodesFailedException
+import com.datastax.oss.driver.api.core.CqlSession
+import com.datastax.oss.driver.api.core.CqlSessionBuilder
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -14,6 +21,7 @@ import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
+import io.ktor.client.HttpClient
 import io.ktor.features.*
 import io.ktor.gson.gson
 import io.ktor.http.ContentType
@@ -31,27 +39,80 @@ import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.net.InetSocketAddress
 
-
+/**
+ * Main function to start the ktor server and the application.
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
 fun main(args: Array<String>) {
     embeddedServer(Netty, commandLineEnvironment(args)).start(true)
 }
 
+/**
+ * [Koin] module for dependency injection.
+ */
+val gatewayModule = module {
+    val logger by logger()
+
+    val cassandraHost = System.getenv("CASSANDRA_SERVICE_HOST") ?: "".also {
+        logger.error("Cassandra host not found!")
+    }
+
+    val jwtSecret = System.getenv("SECRET_JWT") ?: "".also {
+        logger.error("Secret for JWT not found!")
+    }
+
+    val session: CqlSession? = try {
+        CqlSessionBuilder()
+            .addContactPoint(InetSocketAddress(cassandraHost, 9042))
+            .withLocalDatacenter("datacenter1")
+            .build()
+    } catch (e: AllNodesFailedException) {
+        logger.error("Could not connect to Cassandra", e.message)
+        null
+    }
+
+    single<UserDatabase> { CassandraUserDatabase(session!!) }
+
+    single { JwtConfiguration(jwtSecret) }
+
+    val client = HttpClient()
+    Runtime.getRuntime().addShutdownHook(Thread(client::close))
+
+    single { client }
+
+    single { UserRepository() }
+    single { ServiceRepository() }
+    single { DefaultKubernetesClient() }
+    single<PodCacheInvalidator> { KubernetesPodCacheInvalidator() }
+}
+
+/**
+ * Main [Application] module for ktor.
+ */
 fun Application.main() {
     install(Koin) {
         modules(gatewayModule)
     }
-
-    val userRepository by inject<UserRepository>()
 
     install(DefaultHeaders)
     install(CallLogging)
 
     install(Authentication) {
         jwt {
-            verifier(JwtConfiguration.verifier)
+            val userRepository by inject<UserRepository>()
+            val jwtConfiguration by inject<JwtConfiguration>()
+
+            realm = "Fiber-Gateway"
+
+            verifier(jwtConfiguration.verifier)
             validate { credential ->
-                if (userRepository.checkId(credential.payload.id) != null) JWTPrincipal(credential.payload) else null
+                if (userRepository.getUserById(credential.payload.claims["user_id"]!!.asString()) != null) JWTPrincipal(
+                    credential.payload
+                ) else null
             }
         }
     }
@@ -86,18 +147,10 @@ fun Application.main() {
         }
 
         authenticate {
-            install(Forwarding)
+            val redirect = Redirect()
+            route("*") {
+                handle { redirect.redirect(this) }
+            }
         }
     }
-}
-
-val gatewayModule = module {
-    val cassandraHost = System.getenv("CASSANDRA_SERVICE_HOST") ?: throw Exception("Cassandra host not found!")
-
-    val cassandra = CassandraConnector(cassandraHost)
-    val userRepository = UserRepository(cassandra.session)
-
-    single { userRepository }
-    single { ServiceRepository() }
-    single { DefaultKubernetesClient() }
 }

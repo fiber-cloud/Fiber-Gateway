@@ -22,19 +22,48 @@ import java.util.*
 fun Route.authenticate() {
     val userRepository by inject<UserRepository>()
 
+    login(userRepository)
+    invalidateCache(userRepository)
+}
+
+/**
+ * Route for login with credentials.
+ *
+ * @receiver [Route]
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
+private fun Route.login(userRepository: UserRepository) {
+    val jwtConfiguration by inject<JwtConfiguration>()
+
     post("/login") {
         val credentials = this.call.receive<UserCredentials>()
         val user = userRepository.getUserByName(credentials.name)
 
         if (user == null) {
-            this.call.respond(LoginResponse(false))
+            this.call.respond(HttpStatusCode.NotFound, LoginResponse(false))
         } else {
             val success = credentials.password == user.password
-            val token = if (success) JwtConfiguration.makeToken(user.uuid.toString()) else ""
-            this.call.respond(LoginResponse(success, token))
+
+            if (success) {
+                this.call.respond(LoginResponse(true, jwtConfiguration.makeToken(user.uuid.toString())))
+            } else {
+                this.call.respond(HttpStatusCode.Forbidden, LoginResponse(false))
+            }
         }
     }
+}
 
+/**
+ * Route for invalidate the cache for a specific uuid.
+ *
+ * @receiver [Route]
+ *
+ * @author Tammo0987
+ * @since 1.0
+ */
+private fun Route.invalidateCache(userRepository: UserRepository) {
     patch("/cache/remove/{uuid}") {
         val uuid = UUID.fromString(this.call.parameters["uuid"])
         userRepository.invalidateCache(uuid)

@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
  * @author Tammo0987
  * @since 1.0
  */
-object JwtConfiguration {
+class JwtConfiguration(private val secret: String) {
 
     /**
      * Issuer for the generated JWT tokens.
@@ -20,15 +20,7 @@ object JwtConfiguration {
      * @see verifier
      * @see makeToken
      */
-    private const val issuer = "Fiber-Gateway"
-
-    /**
-     * Secret for signing the JWT tokens.
-     *
-     * @see algorithm
-     * @throws SecretNotAvailableException If secret is not in the environment variables.
-     */
-    private val secret = System.getenv("SECRET_JWT") ?: throw SecretNotAvailableException()
+    private val issuer = "Fiber-Gateway"
 
     /**
      * Algorithm for creating the JWT tokens.
@@ -56,16 +48,8 @@ object JwtConfiguration {
     fun makeToken(userId: String): String = JWT.create()
         .withSubject("Authentication")
         .withIssuer(this.issuer)
-        .withClaim("id", userId)
+        .withClaim("user_id", userId)
         .withExpiresAt(Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1)))
         .sign(this.algorithm)
 
 }
-
-/**
- * Should be thrown, if the JWT secret was not found in the environment variables.
- *
- * @author Tammo0987
- * @since 1.0
- */
-class SecretNotAvailableException : Exception("JWT Secret is not available!")

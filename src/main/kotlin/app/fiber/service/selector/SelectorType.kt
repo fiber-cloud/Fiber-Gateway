@@ -3,6 +3,8 @@ package app.fiber.service.selector
 /**
  * Enumeration of all [SelectorTypes][SelectorType].
  *
+ * @param [select] [Selection] for matching to a pattern.
+ *
  * @author Tammo0987
  * @since 1.0
  */

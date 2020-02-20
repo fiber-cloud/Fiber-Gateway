@@ -31,7 +31,13 @@ dependencies {
 
     implementation(Dependencies.logback)
 
+
+    testImplementation(Dependencies.cassandraUnit)
+    testImplementation(Dependencies.environmentVariables)
     testImplementation(Dependencies.junit)
+    testImplementation(Dependencies.koinTest)
+    testImplementation(Dependencies.ktorClientMock)
+    testImplementation(Dependencies.ktorClientMockJvm)
     testImplementation(Dependencies.ktorTestEngine)
     testImplementation(Dependencies.mockk)
 }
@@ -79,10 +85,12 @@ object Version {
     const val kotlin = "1.3.50"
     const val ktor = "1.2.5"
     const val logback = "1.2.3"
-    const val kubernetes = "4.7.0"
+    const val kubernetes = "4.7.1"
 
-    const val junit = "5.5.2"
+    const val cassandraUnit = "4.3.1.0"
+    const val junit = "4.1.2"
     const val mockk = "1.9.3"
+    const val environment = "1.19.0"
 }
 
 object Dependencies {
@@ -95,7 +103,7 @@ object Dependencies {
 
     const val ktorNetty = "io.ktor:ktor-server-netty:${Version.ktor}"
     const val ktorJwt =  "io.ktor:ktor-auth-jwt:${Version.ktor}"
-    const val ktorGson =  "io.ktor:ktor-gson:${Version.ktor}"
+    const val ktorGson = "io.ktor:ktor-gson:${Version.ktor}"
     const val ktorClient = "io.ktor:ktor-client-apache:${Version.ktor}"
 
     const val kubernetes = "io.fabric8:kubernetes-client:${Version.kubernetes}"
@@ -105,7 +113,19 @@ object Dependencies {
     const val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Version.kotlin}"
 
 
-    const val junit = "org.junit.jupiter:junit-jupiter-api:${Version.junit}"
+    // Testing dependencies
+    const val cassandraUnit = "org.cassandraunit:cassandra-unit:${Version.cassandraUnit}"
+
+    const val environmentVariables = "com.github.stefanbirkner:system-rules:${Version.environment}"
+
+    const val junit = "junit:junit:${Version.junit}"
+
+    const val koinTest = "org.koin:koin-test:${Version.koin}"
+
+    const val ktorClientMock = "io.ktor:ktor-client-mock:${Version.ktor}"
+    const val ktorClientMockJvm = "io.ktor:ktor-client-mock-jvm:${Version.ktor}"
+
     const val ktorTestEngine = "io.ktor:ktor-server-test-host:${Version.ktor}"
+
     const val mockk = "io.mockk:mockk:${Version.mockk}"
 }
