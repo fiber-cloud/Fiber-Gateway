@@ -20,7 +20,7 @@ import java.util.*
  * @author Tammo0987
  * @since 1.0
  */
-class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, KoinComponent {
+class CassandraUserDatabase(private val session: CqlSession?) : UserDatabase, KoinComponent {
 
     /**
      * Name of the database table.
@@ -37,9 +37,11 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
         })
 
     init {
-        this.createKeyspace()
-        this.createTable()
-        Runtime.getRuntime().addShutdownHook(Thread(this.session::close))
+        this.session?.let {
+            this.createKeyspace()
+            this.createTable()
+            Runtime.getRuntime().addShutdownHook(Thread(this.session::close))
+        }
     }
 
     /**
@@ -56,7 +58,7 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
             .value("password", QueryBuilder.bindMarker())
             .build()
 
-        val statement = this.session.prepare(userInsert)
+        val statement = this.session!!.prepare(userInsert)
 
         val boundStatement = statement.bind()
             .setUuid(0, user.uuid)
@@ -90,7 +92,7 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
             .allowFiltering()
             .build()
 
-        val statement = this.session.prepare(userSelect)
+        val statement = this.session!!.prepare(userSelect)
         val boundStatement = statement.bind()
             .setString(0, name)
 
@@ -116,7 +118,7 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
             .isEqualTo(QueryBuilder.bindMarker())
             .build()
 
-        val statement = this.session.prepare(userDelete)
+        val statement = this.session!!.prepare(userDelete)
         val boundStatement = statement.bind()
             .setUuid(0, user.uuid)
 
@@ -148,7 +150,7 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
             .isEqualTo(QueryBuilder.bindMarker())
             .build()
 
-        val statement = this.session.prepare(userSelect)
+        val statement = this.session!!.prepare(userSelect)
         val boundStatement = statement.bind()
             .setUuid(0, userId)
 
@@ -172,7 +174,7 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
             .ifNotExists()
             .withSimpleStrategy(1)
 
-        this.session.execute(createKeyspace.build())
+        this.session!!.execute(createKeyspace.build())
         this.session.execute("USE $keyspaceName")
     }
 
@@ -186,7 +188,7 @@ class CassandraUserDatabase(private val session: CqlSession) : UserDatabase, Koi
             .withColumn("name", DataTypes.TEXT)
             .withColumn("password", DataTypes.TEXT)
 
-        this.session.execute(tableQuery.build())
+        this.session!!.execute(tableQuery.build())
     }
 
 }

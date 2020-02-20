@@ -20,10 +20,8 @@ import java.util.*
  * @since 1.0
  */
 fun Route.authenticate() {
-    val userRepository by inject<UserRepository>()
-
-    login(userRepository)
-    invalidateCache(userRepository)
+    login()
+    invalidateCache()
 }
 
 /**
@@ -34,7 +32,8 @@ fun Route.authenticate() {
  * @author Tammo0987
  * @since 1.0
  */
-private fun Route.login(userRepository: UserRepository) {
+private fun Route.login() {
+    val userRepository by inject<UserRepository>()
     val jwtConfiguration by inject<JwtConfiguration>()
 
     post("/login") {
@@ -63,7 +62,9 @@ private fun Route.login(userRepository: UserRepository) {
  * @author Tammo0987
  * @since 1.0
  */
-private fun Route.invalidateCache(userRepository: UserRepository) {
+private fun Route.invalidateCache() {
+    val userRepository by inject<UserRepository>()
+
     patch("/cache/remove/{uuid}") {
         val uuid = UUID.fromString(this.call.parameters["uuid"])
         userRepository.invalidateCache(uuid)

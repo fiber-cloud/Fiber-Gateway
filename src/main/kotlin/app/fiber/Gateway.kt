@@ -75,7 +75,7 @@ val gatewayModule = module {
         null
     }
 
-    single<UserDatabase> { CassandraUserDatabase(session!!) }
+    single<UserDatabase> { CassandraUserDatabase(session) }
 
     single { JwtConfiguration(jwtSecret) }
 
