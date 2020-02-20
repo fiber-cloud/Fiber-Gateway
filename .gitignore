@@ -2,6 +2,7 @@
 
 .gradle
 /build
+/out
 
 # IntelliJ
 
@@ -10,3 +11,4 @@
 
 # Cassandra
 /target
+.toDelete

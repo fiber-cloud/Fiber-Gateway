@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -44,6 +45,12 @@ dependencies {
 
 tasks {
 
+    test {
+        testLogging {
+            exceptionFormat = TestExceptionFormat.FULL
+        }
+    }
+
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
     }
@@ -72,7 +79,7 @@ tasks {
     build {
         dependsOn(exportLib)
     }
-    
+
     jar {
         archiveVersion.set("")
     }
