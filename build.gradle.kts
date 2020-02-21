@@ -2,7 +2,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.61"
 }
 
 group = "app.fiber"
@@ -91,12 +91,12 @@ tasks {
 }
 
 object Version {
-    const val cassandra = "4.3.0"
+    const val cassandra = "4.4.0"
     const val koin = "2.0.1"
-    const val kotlin = "1.3.50"
+    const val kotlin = "1.3.61"
     const val ktor = "1.2.5"
     const val logback = "1.2.3"
-    const val kubernetes = "4.7.1"
+    const val kubernetes = "4.8.0"
 
     const val cassandraUnit = "4.3.1.0"
     const val junit = "4.1.2"
