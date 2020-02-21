@@ -45,6 +45,17 @@ class UserRepositoryTest : KoinTest {
     }
 
     @Test
+    fun `test add user`() {
+        val database = get<UserDatabase>()
+
+        every { database.insertUser(testUser) } just Runs
+
+        this.userRepository.addUser(this.testUser)
+
+        verify { database.insertUser(testUser) }
+    }
+
+    @Test
     fun `test get user by name`() {
         val database = get<UserDatabase>()
 
@@ -63,9 +74,19 @@ class UserRepositoryTest : KoinTest {
         every { database.getUserById(uuid) } returns this.testUser
         every { database.getUserById(wrongUUID) } returns null
 
-
         assertEquals(this.testUser, this.userRepository.getUserById(this.uuid.toString()))
         assertNull(this.userRepository.getUserById(wrongUUID.toString()))
+    }
+
+    @Test
+    fun `test delete user`() {
+        val database = get<UserDatabase>()
+
+        every { database.deleteUser(testUser) } just Runs
+
+        this.userRepository.deleteUser(this.testUser)
+
+        verify { database.deleteUser(testUser) }
     }
 
     @Test

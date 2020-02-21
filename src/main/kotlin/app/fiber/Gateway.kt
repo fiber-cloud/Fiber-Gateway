@@ -10,6 +10,7 @@ import app.fiber.logger.logger
 import app.fiber.redirect.Redirect
 import app.fiber.service.ServiceRepository
 import app.fiber.user.UserRepository
+import app.fiber.user.user
 import com.datastax.oss.driver.api.core.AllNodesFailedException
 import com.datastax.oss.driver.api.core.CqlSession
 import com.datastax.oss.driver.api.core.CqlSessionBuilder
@@ -144,6 +145,10 @@ fun Application.main() {
             }
 
             authenticate()
+
+            authenticate {
+                user()
+            }
         }
 
         authenticate {
