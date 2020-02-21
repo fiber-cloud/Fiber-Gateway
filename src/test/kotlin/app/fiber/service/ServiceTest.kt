@@ -56,8 +56,10 @@ class ServiceTest : KoinTest {
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody("{\"name\":\"Name\",\"password\":\"Password\"}")
         }.response.content
-            ?.replace("{\"success\":true,\"token\":\"", "")
-            ?.replace("\"}", "")
+        /*?.replace("{\"success\":true,\"token\":\"", "")
+        ?.replace("\"}", "")*/
+
+        println(token)
 
 
         val client = HttpClient(MockEngine) {
@@ -87,7 +89,6 @@ class ServiceTest : KoinTest {
         handleRequest(HttpMethod.Get, "/test") {
             addHeader(HttpHeaders.Authorization, "Bearer $token")
         }.apply {
-            println(this.response.content)
             assertTrue(this.requestHandled)
             assertEquals(HttpStatusCode.OK, this.response.status())
             assertEquals("Forwarded Content", this.response.content)
