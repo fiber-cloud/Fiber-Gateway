@@ -3,7 +3,7 @@ name: Java CI
 on: [push]
 
 jobs:
-  build:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -16,4 +16,4 @@ jobs:
       - name: Give Gradle permissions
         run: chmod +x gradlew
       - name: Test with Gradle
-        run: ./gradlew test
+        run: ./gradlew --no-build-cache cleanTest test

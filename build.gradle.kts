@@ -46,6 +46,9 @@ dependencies {
 tasks {
 
     test {
+        jvmArgs = listOf("-Xmx4G", "-Xms4G")
+
+        logging.captureStandardOutput(LogLevel.DEBUG)
         testLogging {
             exceptionFormat = TestExceptionFormat.FULL
         }
