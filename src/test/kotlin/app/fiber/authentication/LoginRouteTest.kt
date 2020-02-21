@@ -77,7 +77,7 @@ class LoginRouteTest : KoinTest {
             setBody(userCredentialsJson)
         }.apply {
             assertTrue(this.requestHandled)
-            assertEquals(HttpStatusCode.Forbidden, this.response.status())
+            assertEquals(HttpStatusCode.Unauthorized, this.response.status())
             assertEquals(successFalse, this.response.content)
         }
     }

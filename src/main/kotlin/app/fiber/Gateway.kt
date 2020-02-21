@@ -27,9 +27,7 @@ import io.ktor.features.*
 import io.ktor.gson.gson
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.TextContent
-import io.ktor.http.withCharset
-import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Routing
 import io.ktor.routing.route
 import io.ktor.server.engine.commandLineEnvironment
@@ -38,8 +36,6 @@ import io.ktor.server.netty.Netty
 import org.koin.dsl.module
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.net.InetSocketAddress
 
 /**
@@ -124,16 +120,13 @@ fun Application.main() {
     }
 
     install(StatusPages) {
-        exception<Exception> {
-            val writer = StringWriter()
-            it.printStackTrace(PrintWriter(writer))
+        exception<Throwable> {
+            install(ContentNegotiation)
 
-            this.call.respond(
-                TextContent(
-                    writer.toString(),
-                    ContentType.Text.Plain.withCharset(Charsets.UTF_8),
-                    HttpStatusCode.InternalServerError
-                )
+            this.call.respondText(
+                "{\"message\":\"${it.message}\"}",
+                ContentType.Application.Json,
+                HttpStatusCode.InternalServerError
             )
         }
     }
@@ -145,7 +138,6 @@ fun Application.main() {
             }
 
             authenticate()
-
             authenticate {
                 user()
             }

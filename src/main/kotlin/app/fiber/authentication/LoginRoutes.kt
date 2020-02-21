@@ -48,7 +48,7 @@ private fun Route.login() {
             if (success) {
                 this.call.respond(LoginResponse(true, jwtConfiguration.makeToken(user.uuid.toString())))
             } else {
-                this.call.respond(HttpStatusCode.Forbidden, LoginResponse(false))
+                this.call.respond(HttpStatusCode.Unauthorized, LoginResponse(false))
             }
         }
     }
