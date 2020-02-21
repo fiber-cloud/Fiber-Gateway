@@ -56,11 +56,8 @@ class ServiceTest : KoinTest {
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody("{\"name\":\"Name\",\"password\":\"Password\"}")
         }.response.content
-        /*?.replace("{\"success\":true,\"token\":\"", "")
-        ?.replace("\"}", "")*/
-
-        println(token)
-
+            ?.replace("{\"success\":true,\"token\":\"", "")
+            ?.replace("\"}", "")
 
         val client = HttpClient(MockEngine) {
             engine {
