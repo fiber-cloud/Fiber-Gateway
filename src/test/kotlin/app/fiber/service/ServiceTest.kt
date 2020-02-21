@@ -87,9 +87,10 @@ class ServiceTest : KoinTest {
         handleRequest(HttpMethod.Get, "/test") {
             addHeader(HttpHeaders.Authorization, "Bearer $token")
         }.apply {
+            println(this.response.content)
             assertTrue(this.requestHandled)
-            assertEquals("Forwarded Content", this.response.content)
             assertEquals(HttpStatusCode.OK, this.response.status())
+            assertEquals("Forwarded Content", this.response.content)
             assertEquals("value", this.response.headers["test"])
         }
     }
