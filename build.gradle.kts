@@ -50,6 +50,7 @@ tasks {
 
         logging.captureStandardOutput(LogLevel.DEBUG)
         testLogging {
+            showStandardStreams = true
             exceptionFormat = TestExceptionFormat.FULL
         }
     }
