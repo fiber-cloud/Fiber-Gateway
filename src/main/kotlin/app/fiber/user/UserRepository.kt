@@ -3,7 +3,7 @@ package app.fiber.user
 import app.fiber.database.User
 import app.fiber.database.UserDatabase
 import org.koin.core.KoinComponent
-import org.koin.core.get
+import org.koin.core.inject
 import java.util.*
 
 /**
@@ -17,7 +17,7 @@ class UserRepository : KoinComponent {
     /**
      * [UserDatabase] to get the data.
      */
-    private val userDatabase = get<UserDatabase>()
+    private val userDatabase by inject<UserDatabase>()
 
     /**
      * Add [User] to this repository.
