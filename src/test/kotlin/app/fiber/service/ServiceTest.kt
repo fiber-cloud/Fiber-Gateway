@@ -81,6 +81,8 @@ class ServiceTest : KoinTest {
             }
         }
 
+        Runtime.getRuntime().addShutdownHook(Thread(client::close))
+
         loadKoinModules(
             module {
                 single(override = true) { client }
