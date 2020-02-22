@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.SignatureVerificationException
-import org.junit.Before
 import org.junit.Test
 import java.util.*
 import kotlin.test.assertEquals
@@ -14,12 +13,7 @@ internal class JwtConfigurationTest {
 
     private val secret = "SECRET"
 
-    private lateinit var jwtConfiguration: JwtConfiguration
-
-    @Before
-    fun setUp() {
-        this.jwtConfiguration = JwtConfiguration(this.secret)
-    }
+    private val jwtConfiguration = JwtConfiguration(this.secret)
 
     @Test(expected = SignatureVerificationException::class)
     fun `token verify should fail`() {
