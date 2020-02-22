@@ -11,6 +11,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.*
 import io.mockk.*
 import kotlinx.serialization.ImplicitReflectionSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.content
+import kotlinx.serialization.json.json
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -101,12 +105,17 @@ class UserRoutesTest {
         uri: String,
         setup: TestApplicationRequest.() -> Unit = {}
     ) = handleRequest(method, uri) {
-        val token = handleRequest(HttpMethod.Post, "/api/login") {
+        val response = handleRequest(HttpMethod.Post, "/api/login") {
+            val body = json {
+                "name" to "Name"
+                "password" to "Password"
+            }.toString()
+
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            setBody("{\"name\":\"Name\",\"password\":\"Password\"}")
+            setBody(body)
         }.response.content
-            ?.replace("{\"success\":true,\"token\":\"", "")
-            ?.replace("\"}", "")
+
+        val token = Json(JsonConfiguration.Stable).parseJson(response!!).jsonObject["token"]?.content
 
         addHeader(HttpHeaders.Authorization, "Bearer $token")
         setup()

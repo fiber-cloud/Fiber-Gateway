@@ -4,17 +4,15 @@ import app.fiber.service.Service
 import app.fiber.service.ServiceRepository
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.statement.readBytes
+import io.ktor.http.*
 import io.ktor.http.content.OutgoingContent
 import io.ktor.request.uri
 import io.ktor.response.respond
-import io.ktor.util.filter
+import io.ktor.util.appendFiltered
 import io.ktor.util.pipeline.PipelineContext
-import kotlinx.coroutines.io.ByteWriteChannel
-import kotlinx.coroutines.io.copyAndClose
+import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.writeFully
 import org.koin.core.KoinComponent
 import org.koin.core.inject
 
@@ -42,26 +40,26 @@ class Redirect : KoinComponent {
 
         val response = service.forward(call)
 
-        call.respond(object : OutgoingContent.WriteChannelContent() {
-            override val contentType: ContentType? = ContentType.parse(
-                response.headers[HttpHeaders.ContentType] ?: ContentType.Text.Plain.toString()
-            )
+        response.execute { clientResponse ->
+            call.respond(object : OutgoingContent.WriteChannelContent() {
 
-            override val headers: Headers = Headers.build {
-                appendAll(response.headers.filter { key, _ ->
-                    !key.equals(
-                        HttpHeaders.ContentType,
-                        ignoreCase = true
-                    ) && !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
-                })
-            }
+                override val contentLength: Long? = clientResponse.contentLength()
 
-            override val status: HttpStatusCode? = response.status
+                override val contentType: ContentType? = clientResponse.contentType()
 
-            override suspend fun writeTo(channel: ByteWriteChannel) {
-                response.content.copyAndClose(channel)
-            }
-        })
+                override val headers: Headers = Headers.build {
+                    appendFiltered(clientResponse.headers) { key, _ ->
+                        !key.equals(HttpHeaders.ContentType, ignoreCase = true) &&
+                                !key.equals(HttpHeaders.ContentLength, ignoreCase = true)
+                    }
+                }
+
+                override val status: HttpStatusCode? = clientResponse.status
+
+                override suspend fun writeTo(channel: ByteWriteChannel) = channel.writeFully(clientResponse.readBytes())
+
+            })
+        }
     }
 
 }
