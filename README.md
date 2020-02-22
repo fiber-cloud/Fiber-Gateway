@@ -1,3 +1,5 @@
+![Build Status](https://github.com/fiber-cloud/Fiber-Gateway/workflows/Java%20CI/badge.svg)
+
 # Fiber-Gateway
 
 This is the Fiber gateway service. 
