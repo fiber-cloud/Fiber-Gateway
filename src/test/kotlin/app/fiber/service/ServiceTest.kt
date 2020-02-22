@@ -14,6 +14,10 @@ import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.content
+import kotlinx.serialization.json.json
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -52,12 +56,17 @@ class ServiceTest : KoinTest {
             }
         )
 
-        val token = handleRequest(HttpMethod.Post, "/api/login") {
+        val response = handleRequest(HttpMethod.Post, "/api/login") {
+            val body = json {
+                "name" to "Name"
+                "password" to "Password"
+            }.toString()
+
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            setBody("{\"name\":\"Name\",\"password\":\"Password\"}")
+            setBody(body)
         }.response.content
-            ?.replace("{\"success\":true,\"token\":\"", "")
-            ?.replace("\"}", "")
+
+        val token = Json(JsonConfiguration.Stable).parseJson(response!!).jsonObject["token"]?.content
 
         val client = HttpClient(MockEngine) {
             engine {

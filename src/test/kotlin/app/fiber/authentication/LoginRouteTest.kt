@@ -14,6 +14,10 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.mockk.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonConfiguration
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.json
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -27,9 +31,15 @@ import kotlin.test.assertEquals
 
 class LoginRouteTest : KoinTest {
 
-    private val userCredentialsJson = "{\"name\":\"Name\",\"password\":\"Password\"}"
+    private val userCredentialsJson = json {
+        "name" to "Name"
+        "password" to "Password"
+    }.toString()
 
-    private val successFalse = "{\"success\":false,\"token\":\"\"}"
+    private val successFalse = json {
+        "success" to false
+        "token" to ""
+    }.toString()
 
     @Rule
     @JvmField
@@ -99,7 +109,9 @@ class LoginRouteTest : KoinTest {
         }.apply {
             assertTrue(this.requestHandled)
             assertEquals(HttpStatusCode.OK, this.response.status())
-            assertTrue(this.response.content!!.contains("\"success\":true"))
+
+            val response = Json(JsonConfiguration.Stable).parseJson(this.response.content!!)
+            assertTrue(response.jsonObject["success"]!!.boolean)
         }
     }
 
