@@ -3,8 +3,8 @@ package app.fiber.service
 import app.fiber.service.selector.Selector
 import io.ktor.application.ApplicationCall
 import io.ktor.client.HttpClient
-import io.ktor.client.call.call
-import io.ktor.client.response.HttpResponse
+import io.ktor.client.request.request
+import io.ktor.client.statement.HttpStatement
 import io.ktor.features.origin
 import io.ktor.http.HttpMethod
 import io.ktor.http.URLProtocol
@@ -38,13 +38,13 @@ data class Service(
      *
      * @param [call] [ApplicationCall] which holds the request information.
      *
-     * @return [HttpResponse] of the call.
+     * @return [HttpStatement] of the call.
      */
-    suspend fun forward(call: ApplicationCall): HttpResponse {
+    suspend fun forward(call: ApplicationCall): HttpStatement {
         val client by inject<HttpClient>()
 
         val request = call.request
-        return client.call {
+        return client.request {
             url {
                 host = this@Service.host
                 port = this@Service.port.toInt()
@@ -55,7 +55,7 @@ data class Service(
             method = HttpMethod(request.httpMethod.value.toUpperCase())
             headers.appendAll(request.headers)
             body = call.receiveText()
-        }.response
+        }
     }
 
 }

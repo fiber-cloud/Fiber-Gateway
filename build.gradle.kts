@@ -94,7 +94,7 @@ object Version {
     const val cassandra = "4.4.0"
     const val koin = "2.0.1"
     const val kotlin = "1.3.61"
-    const val ktor = "1.2.5"
+    const val ktor = "1.3.0"
     const val logback = "1.2.3"
     const val kubernetes = "4.8.0"
 
