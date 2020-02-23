@@ -3,6 +3,7 @@ package app.fiber.cache
 import io.fabric8.kubernetes.client.KubernetesClient
 import io.ktor.client.HttpClient
 import io.ktor.client.request.patch
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.core.KoinComponent
@@ -46,12 +47,12 @@ class KubernetesPodCacheInvalidator : PodCacheInvalidator, KoinComponent {
             .map { it.status.podIP }
             .filter { it != ownIp }
 
-        HttpClient().use { client ->
-            runBlocking {
-                ips.map { ip ->
-                    launch { client.patch("http://$ip/api/cache/remove/$userId") }
-                }.forEach { it.join() }
-            }
+        val client by inject<HttpClient>()
+
+        runBlocking {
+            ips.map { ip ->
+                launch { client.patch("http://$ip/api/cache/remove/$userId") }
+            }.joinAll()
         }
     }
 

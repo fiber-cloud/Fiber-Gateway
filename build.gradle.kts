@@ -40,6 +40,7 @@ dependencies {
     testImplementation(Dependencies.ktorClientMock)
     testImplementation(Dependencies.ktorClientMockJvm)
     testImplementation(Dependencies.ktorTestEngine)
+    testImplementation(Dependencies.kubernetesMock)
     testImplementation(Dependencies.mockk)
 }
 
@@ -137,6 +138,8 @@ object Dependencies {
     const val ktorClientMockJvm = "io.ktor:ktor-client-mock-jvm:${Version.ktor}"
 
     const val ktorTestEngine = "io.ktor:ktor-server-test-host:${Version.ktor}"
+
+    const val kubernetesMock = "io.fabric8:kubernetes-server-mock:${Version.kubernetes}"
 
     const val mockk = "io.mockk:mockk:${Version.mockk}"
 }
